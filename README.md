@@ -1,5 +1,5 @@
 # Website Downloader
-Application for offline web page preview.
+Web application for downloading web pages for offline preview.
 
 ### Problem
 1. Make a  website, hosted locally, using Java.
