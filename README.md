@@ -18,5 +18,5 @@ Web application for downloading web pages for offline preview.
 6. Download is available using the same form submit button. Dialog Box opens and shows only .zip files, suggesting name of the file to be page title.
 
 
-
+---
 ##### This is an example of Java development task for a job interview.
