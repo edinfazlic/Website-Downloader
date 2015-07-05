@@ -64,6 +64,8 @@ public class DownloadPage extends HttpServlet {
 		List<String> sourceUrlList = new ArrayList<String>();
 		List<String> filesList = new ArrayList<String>();
 
+		String protocol = pageUrl.substring(0, pageUrl.indexOf(":") + 1);
+
 		Matcher matcher = getSourcesMatcher(html);
 		while (matcher.find()) {
 			String sourceUrl = matcher.group(3);
@@ -78,14 +80,18 @@ public class DownloadPage extends HttpServlet {
 				downloadedFileName = fixDuplicateFileName(downloadedFileName, filesList);
 			}
 
-			URL url = new URL(getAbsoluteSourceUrl(pageUrl, sourceUrl, sourceUrlParts.length));
-			InputStream inputStream = url.openStream();
-			writeToOutputStream(buffer, zipOutputStream, inputStream, fileName + "_files\\" + downloadedFileName);
-			inputStream.close();
+			URL url = new URL(getAbsoluteSourceUrl(pageUrl, sourceUrl, sourceUrlParts.length, protocol));
+			try {
+				InputStream inputStream = url.openStream();
+				writeToOutputStream(buffer, zipOutputStream, inputStream, fileName + "_files\\" + downloadedFileName);
+				inputStream.close();
+				matcher.appendReplacement(resultHtml, matcher.group(1) + matcher.group(2) + fileName + "_files/" + downloadedFileName + matcher.group(4));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
 			sourceUrlList.add(sourceUrl);
 			filesList.add(downloadedFileName);
-			matcher.appendReplacement(resultHtml, matcher.group(1) + matcher.group(2) + fileName + "_files/" + downloadedFileName + matcher.group(4));
 		}
 		matcher.appendTail(resultHtml);
 		html = resultHtml.toString();
@@ -124,7 +130,10 @@ public class DownloadPage extends HttpServlet {
 				+ fileName.substring(fileName.lastIndexOf("."));
 	}
 
-	private String getAbsoluteSourceUrl(String pageUrl, String sourceUrl, int sourceUrlPartsLength) {
+	private String getAbsoluteSourceUrl(String pageUrl, String sourceUrl, int sourceUrlPartsLength, String protocol) {
+		if (sourceUrl.startsWith("//")) {
+			return protocol + sourceUrl;
+		}
 		if (sourceUrl.startsWith("/")) {
 			return pageUrl + sourceUrl;
 		}
@@ -145,7 +154,7 @@ public class DownloadPage extends HttpServlet {
 
 			return getUrl;
 		}
-		return "";
+		return sourceUrl;
 	}
 
 	private Matcher getSourcesMatcher(String html) {
@@ -169,6 +178,7 @@ public class DownloadPage extends HttpServlet {
 		fileChooser.setSelectedFile(new File(title + ".zip"));
 
 		parentFrame.setVisible(true);
+		parentFrame.setAlwaysOnTop(true);
 		parentFrame.toFront();
 		int userSelection = fileChooser.showSaveDialog(parentFrame);
 		parentFrame.setVisible(false);
